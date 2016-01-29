@@ -19,15 +19,21 @@ namespace Test {
 
 		static void Main(string[] args) {
 			Console.Title = "NeutronVM Test";
-			
+
 			Assembler Asm = new Assembler()
+				.OpCode(Opcode.PUSHINT32).Constant(0)
+				.OpCode(Opcode.PUSHINT64).AddressOf("Main")
+				.OpCode(Opcode.CALL)
+				.OpCode(Opcode.TERMINATE)
+				.Label("Main")
 				.OpCode(Opcode.PUSHINT32).Constant(42)
 				.OpCode(Opcode.PUSHINT32).Constant(1)
 				.OpCode(Opcode.LOAD).Constant("getstring".GetHashCode())
 				.OpCode(Opcode.CALL)
 				.OpCode(Opcode.PUSHINT32).Constant(1)
 				.OpCode(Opcode.LOAD).Constant("print".GetHashCode())
-				.OpCode(Opcode.CALL);
+				.OpCode(Opcode.CALL)
+				.OpCode(Opcode.RET);
 
 			VM V = new VM(Asm.ToBytecode());
 			V.Store("getstring".GetHashCode(), new Func<int, string>(GetString));

@@ -9,15 +9,16 @@ namespace Neutron {
 		public static readonly Obj NULL = new Obj(null);
 
 		public object Value;
+		Type ValueType;
 
 		public Obj(object Val) {
 			Value = Val;
+			if (Value != null)
+				ValueType = Value.GetType();
 		}
 
 		public Type GetValueType() {
-			if (Value != null)
-				return Value.GetType();
-			return null;
+			return ValueType;
 		}
 
 		public string GetValueTypeName() {

@@ -7,14 +7,15 @@ using System.Threading.Tasks;
 
 namespace Neutron {
 	public enum Opcode : byte {
-		NOP = 0,
-		PUSHDBL, // double
-		PUSHINT32, // int
-		PUSHINT64, // long
-		STORE, // int
-		LOAD, // int
-		CALL,
-		RET,
+		TERMINATE = 0,
+		NOP,
+		PUSHDBL, // PUSHDBL double; pushes double onto stack
+		PUSHINT32, // PUSHINT32 int; pushes int onto stack
+		PUSHINT64, // PUSHINT64 long; pushes long onto stack
+		STORE, // STORE int; pops object from stack and stores into register [int]
+		LOAD, // LOAD int; loads register [int] and pushes the object onto stack
+		CALL, // CALL; pops a callable object and the number of arguments from stack before calling
+		RET, // RET; returns from a CALL instruction
 	}
 
 	public class VM {
@@ -69,6 +70,9 @@ namespace Neutron {
 			for (int Iteration = 0; (Iteration < InstrCount) && (IP < Bytecode.Length) && Executing; Iteration++) {
 				Opcode Code = Bytecode.GetOpcode(ref IP);
 				switch (Code) {
+					case Opcode.TERMINATE:
+						Executing = false;
+						break;
 					case Opcode.NOP:
 						break;
 					case Opcode.PUSHDBL:
@@ -93,6 +97,7 @@ namespace Neutron {
 							Obj[] Args = new Obj[ArgCnt];
 							for (int i = 0; i < ArgCnt; i++)
 								Args[i] = Pop();
+
 							CallStack.Push(new CallFrame(Args, IP));
 
 							if (typeof(Delegate).IsAssignableFrom(Fnc.GetValueType())) {
