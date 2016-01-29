@@ -8,52 +8,108 @@ using System.Threading.Tasks;
 namespace Neutron {
 	public enum Opcode : byte {
 		NOP = 0,
+		PUSHDBL, // double
+		PUSHINT32, // int
+		PUSHINT64, // long
+		STORE, // int
+		LOAD, // int
 		CALL,
-		TAILCALL,
-		RET
+		RET,
 	}
 
 	public class VM {
 		public bool Executing { get; private set; }
 		Bytecode Bytecode;
-		Stack<CallFrame> CallStack;
 		long IP;
 
-		CallFrame CurrentFrame
-		{
-			get
-			{
-				return CallStack.Peek();
-			}
-		}
+		public Stack<Obj> Stack;
+		public Stack<CallFrame> CallStack;
+		public Dictionary<int, Obj> Regs;
 
 		public VM(Bytecode Code, long IP = 0) {
 			this.IP = IP;
-			CallStack = new Stack<CallFrame>();
 			Bytecode = Code;
 			Executing = true;
+			Stack = new Stack<Obj>();
+			Regs = new Dictionary<int, Obj>();
+			CallStack = new Stack<CallFrame>();
+		}
 
-			CallStack.Push(new CallFrame());
+		public void Push(Obj O) {
+			Stack.Push(O);
+		}
+
+		public Obj Pop() {
+			if (Stack.Count > 0)
+				return Stack.Pop();
+			return Obj.NULL;
+		}
+
+		public T Pop<T>() {
+			Obj O = Pop();
+			if (O.GetValueType() == typeof(T))
+				return (T)O.Value;
+			throw new InvalidOperationException(string.Format("Cannot pop {0} as {1}", O.GetValueTypeName(), typeof(T).Name));
+		}
+
+		public Obj Load(int K) {
+			if (!Regs.ContainsKey(K))
+				return Obj.NULL;
+			return Regs[K];
+		}
+
+		public void Store(int K, Obj V) {
+			Regs[K] = V;
 		}
 
 		public void Run(int InstrCount = 16) {
-			for (int i = 0; i < InstrCount; i++) {
+			if (!(IP < Bytecode.Length))
+				Executing = false;
+
+			for (int Iteration = 0; (Iteration < InstrCount) && (IP < Bytecode.Length) && Executing; Iteration++) {
 				Opcode Code = Bytecode.GetOpcode(ref IP);
 				switch (Code) {
 					case Opcode.NOP:
 						break;
+					case Opcode.PUSHDBL:
+						Push(Bytecode.GetDouble(ref IP));
+						break;
+					case Opcode.PUSHINT32:
+						Push(Bytecode.GetInt32(ref IP));
+						break;
+					case Opcode.PUSHINT64:
+						Push(Bytecode.GetInt64(ref IP));
+						break;
+					case Opcode.STORE:
+						Store(Bytecode.GetInt32(ref IP), Stack.Pop());
+						break;
+					case Opcode.LOAD:
+						Push(Load(Bytecode.GetInt32(ref IP)));
+						break;
 					case Opcode.CALL: {
-							long NewIP = Bytecode.GetInt64(ref this.IP);
+							Obj Fnc = Pop();
 
-							CallFrame NewFrame = new CallFrame(NewIP);
-							CallStack.Push(NewFrame);
-							this.IP = NewIP;
+							int ArgCnt = Pop<int>();
+							Obj[] Args = new Obj[ArgCnt];
+							for (int i = 0; i < ArgCnt; i++)
+								Args[i] = Pop();
+							CallStack.Push(new CallFrame(Args, IP));
+
+							if (typeof(Delegate).IsAssignableFrom(Fnc.GetValueType())) {
+								Obj Ret = Fnc.Invoke(Args);
+								CallFrame ReturnFrame = CallStack.Pop();
+								IP = ReturnFrame.ReturnIP;
+								if (Ret != null)
+									Push(Ret);
+							} else if (Fnc.GetValueType() == typeof(long)) {
+								IP = (long)Fnc.Value;
+							} else
+								throw new InvalidOperationException();
+
 							break;
 						}
-					case Opcode.TAILCALL:
-						this.IP = CurrentFrame.IP;
-						break;
 					case Opcode.RET:
+						IP = CallStack.Pop().ReturnIP;
 						break;
 					default:
 						throw new NotImplementedException("Not implemented opcode: " + Code);

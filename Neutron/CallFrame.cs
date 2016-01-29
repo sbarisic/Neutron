@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Neutron {
-	class CallFrame {
-		public Obj[] Args;
-		public long IP;
+	public class CallFrame {
+		public Obj[] Arguments;
+		public long ReturnIP;
 
-		public CallFrame(long IP = 0) {
-			Args = new Obj[] { };
-			this.IP = IP;
+		public CallFrame(Obj[] Args, long RetIP) {
+			Arguments = Args;
+			ReturnIP = RetIP;
 		}
 	}
 }

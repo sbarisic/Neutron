@@ -7,6 +7,14 @@ using System.IO;
 
 namespace Neutron {
 	public abstract class Bytecode {
+		public virtual long Length
+		{
+			get
+			{
+				return -1;
+			}
+		}
+
 		public abstract byte GetByte(ref long IP);
 
 		public virtual byte[] GetBytes(ref long IP, int Len) {
@@ -36,6 +44,14 @@ namespace Neutron {
 	public class BytecodeArray : Bytecode {
 		byte[] TehArray;
 
+		public override long Length
+		{
+			get
+			{
+				return TehArray.LongLength;
+			}
+		}
+
 		public BytecodeArray(byte[] Arr) {
 			TehArray = new byte[Arr.Length];
 			Arr.CopyTo(TehArray, 0);
@@ -52,6 +68,14 @@ namespace Neutron {
 
 	public class BytecodeStream : Bytecode {
 		Stream TehStream;
+
+		public override long Length
+		{
+			get
+			{
+				return TehStream.Length;
+			}
+		}
 
 		public BytecodeStream(Stream Str) {
 			TehStream = Str;

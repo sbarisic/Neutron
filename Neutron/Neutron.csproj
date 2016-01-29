@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Bytecode.cs" />
     <Compile Include="CallFrame.cs" />
+    <Compile Include="Assembler.cs" />
     <Compile Include="Obj.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="VM.cs" />
