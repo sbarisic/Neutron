@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Numerics;
 
 namespace Neutron {
 	public abstract class Bytecode {
@@ -34,6 +35,10 @@ namespace Neutron {
 
 		public virtual long GetInt64(ref long IP) {
 			return BitConverter.ToInt64(GetBytes(ref IP, sizeof(long)), 0);
+		}
+
+		public virtual string GetString(ref long IP) {
+			return Encoding.Unicode.GetString(GetBytes(ref IP, GetInt32(ref IP)));
 		}
 
 		public virtual double GetDouble(ref long IP) {

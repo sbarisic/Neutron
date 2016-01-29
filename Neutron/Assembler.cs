@@ -26,6 +26,13 @@ namespace Neutron {
 			if (Obj == null)
 				throw new InvalidOperationException();
 
+			if (Obj is string) {
+				byte[] StrBytes = Encoding.Unicode.GetBytes((string)Obj);
+				Constant(StrBytes.Length);
+				Mem.Write(StrBytes, 0, StrBytes.Length);
+				return this;
+			}
+
 			MethodInfo GetBytesInfo = typeof(BitConverter).GetMethod("GetBytes", new[] { Obj.GetType() });
 			if (GetBytesInfo == null)
 				throw new Exception("Cannot convert type to bytes: " + Obj.GetType());

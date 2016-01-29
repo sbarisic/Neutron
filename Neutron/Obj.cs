@@ -65,5 +65,9 @@ namespace Neutron {
 		public static implicit operator Obj(Delegate Del) {
 			return new Obj(Del);
 		}
+
+		public static implicit operator Obj(string Str) {
+			return new Obj(Str);
+		}
 	}
 }
